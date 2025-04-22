@@ -1,167 +1,133 @@
 package com.auth;
 
-import java.util.*;
-import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
 
 public class ECommerceSystem {
-
-    private List<Produto> produtos = new ArrayList();
-    private List<Usuario> usuarios = new ArrayList();
-    private List<Pedido> pedidos = new ArrayList();
-    private static int nextPedidoId = 1;
-
-    // Métodos para Produtos
-    public void cadastrarProduto(int id, String nome, String desc, double preco, int estoque) {
-        Produto p = new Produto();
-        p.id = id;
-        p.nome = nome;
-        p.descricao = desc;
-        p.preco = preco;
-        p.estoque = estoque;
-        produtos.add(p);
-    }
-
-    public void atualizarEstoque(int produtoId, int quantidade) {
-        for (Produto p : produtos) {
-            if (p.id == produtoId) {
-                p.estoque += quantidade;
-                return;
-            }
-        }
-    }
-
-    // Métodos para Usuários
-    public void registrarUsuario(String email, String senha, String nome, String endereco) {
-        Usuario u = new Usuario();
-        u.email = email;
-        u.senha = senha; // Sem hash - problema de segurança!
-        u.nome = nome;
-        u.endereco = endereco;
-        usuarios.add(u);
-    }
-
-    // Métodos para Pedidos
-    public int criarPedido(String emailUsuario) {
-        Pedido p = new Pedido();
-        p.id = nextPedidoId++;
-        p.usuarioEmail = emailUsuario;
-        p.data = new Date();
-        p.itens = new HashMap<>();
-        p.status = "Pendente";
-        pedidos.add(p);
-        return p.id;
-    }
-
-    public void adicionarItemPedido(int pedidoId, int produtoId, int quantidade) {
-        for (Pedido p : pedidos) {
-            if (p.id == pedidoId) {
-                if (p.itens.containsKey(produtoId)) {
-                    p.itens.put(produtoId, p.itens.get(produtoId) + quantidade);
-                } else {
-                    p.itens.put(produtoId, quantidade);
-                }
-                return;
-            }
-        }
-    }
-
-    public void finalizarPedido(int pedidoId) {
-        for (Pedido p : pedidos) {
-            if (p.id == pedidoId) {
-                p.status = "Finalizado";
-                for (Map.Entry<Integer, Integer> item : p.itens.entrySet()) {
-                    for (Produto prod : produtos) {
-                        if (prod.id == item.getKey()) {
-                            prod.estoque -= item.getValue();
-                        }
-                    }
-                }
-                return;
-            }
-        }
-    }
-
-    // Métodos de relatório
-    public void gerarRelatorioVendas() {
-        double total = 0;
-        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
-
-        System.out.println("Relatório de Vendas");
-        System.out.println("===================");
-
-        for (Pedido p : pedidos) {
-            if (p.status.equals("Finalizado")) {
-                double valorPedido = 0;
-                System.out.println("Pedido #" + p.id + " - " + sdf.format(p.data));
-                System.out.println("Itens:");
-
-                for (Map.Entry<Integer, Integer> item : p.itens.entrySet()) {
-                    Produto prod = getProdutoById(item.getKey());
-                    if (prod != null) {
-                        System.out.println("- " + prod.nome + ": " + item.getValue() + " x " + prod.preco);
-                        valorPedido += item.getValue() * prod.preco;
-                    }
-                }
-
-                System.out.println("Total do Pedido: R$" + valorPedido);
-                total += valorPedido;
-            }
-        }
-
-        System.out.println("===================");
-        System.out.println("Total Geral: R$" + total);
-    }
-
-    // Métodos auxiliares
-    private Produto getProdutoById(int id) {
-        for (Produto p : produtos) {
-            if (p.id == id) return p;
-        }
-        return null;
-    }
-
-    // Classes internas
-    class Produto {
-        int id;
-        String nome;
-        String descricao;
-        double preco;
-        int estoque;
-    }
-
-    class Usuario {
-        String email;
-        String senha;
-        String nome;
-        String endereco;
-    }
-
-    class Pedido {
-        int id;
-        String usuarioEmail;
-        Date data;
-        Map<Integer, Integer> itens; // produtoId -> quantidade
-        String status;
-    }
+    private static List<Product> products = new ArrayList<>();
+    private static Scanner scanner = new Scanner(System.in);
 
     public static void main(String[] args) {
-        ECommerceSystem sistema = new ECommerceSystem();
+        int choice;
+        do {
+            System.out.println("\n=== Inventory Management System ===");
+            System.out.println("1. Add Product");
+            System.out.println("2. Update Stock");
+            System.out.println("3. Process Sale");
+            System.out.println("4. Generate Reports");
+            System.out.println("5. Exit");
+            System.out.print("Enter your choice: ");
+            choice = scanner.nextInt();
+            scanner.nextLine();  // Consume newline
 
-        // Cadastro de produtos
-        sistema.cadastrarProduto(1, "Smartphone", "Modelo X", 2500.0, 10);
-        sistema.cadastrarProduto(2, "Notebook", "Modelo Y", 4500.0, 5);
-        sistema.cadastrarProduto(3, "Tablet", "Modelo Z", 1200.0, 8);
+            switch (choice) {
+                case 1 -> addProduct();
+                case 2 -> updateStock();
+                case 3 -> processSale();
+                case 4 -> new ReportGenerator(products).showMenu();
+                case 5 -> System.out.println("Exiting system...");
+                default -> System.out.println("Invalid choice!");
+            }
+        } while (choice != 5);
+    }
 
-        // Cadastro de usuário
-        sistema.registrarUsuario("cliente@email.com", "senha123", "João Silva", "Rua A, 123");
+    private static void addProduct() {
+        System.out.println("\n=== Add New Product ===");
+        System.out.print("Enter product ID: ");
+        int id = scanner.nextInt();
+        scanner.nextLine();
 
-        // Processo de compra
-        int pedidoId = sistema.criarPedido("cliente@email.com");
-        sistema.adicionarItemPedido(pedidoId, 1, 2); // 2 smartphones
-        sistema.adicionarItemPedido(pedidoId, 3, 1); // 1 tablet
-        sistema.finalizarPedido(pedidoId);
+        System.out.print("Enter product name: ");
+        String name = scanner.nextLine();
 
-        // Gerar relatório
-        sistema.gerarRelatorioVendas();
+        System.out.print("Enter description: ");
+        String description = scanner.nextLine();
+
+        System.out.print("Enter price: ");
+        double price = scanner.nextDouble();
+
+        System.out.print("Enter initial stock: ");
+        int stock = scanner.nextInt();
+
+        products.add(new Product(id, name, description, price, stock));
+        System.out.println("Product added successfully!");
+    }
+
+    private static void updateStock() {
+        if (products.isEmpty()) {
+            System.out.println("No products available!");
+            return;
+        }
+
+        System.out.println("\n=== Update Stock ===");
+        listProducts();
+
+        System.out.print("Select product ID: ");
+        int id = scanner.nextInt();
+
+        Product product = findProduct(id);
+        if (product == null) {
+            System.out.println("Product not found!");
+            return;
+        }
+
+        System.out.print("Enter quantity to add (use negative to remove): ");
+        int quantity = scanner.nextInt();
+
+        try {
+            if (quantity > 0) {
+                product.getStock().add(quantity);
+            } else {
+                product.getStock().remove(-quantity);
+            }
+            System.out.println("Stock updated successfully!");
+        } catch (IllegalArgumentException e) {
+            System.out.println("Error: " + e.getMessage());
+        }
+    }
+
+    private static void processSale() {
+        if (products.isEmpty()) {
+            System.out.println("No products available!");
+            return;
+        }
+
+        System.out.println("\n=== Process Sale ===");
+        listProducts();
+
+        System.out.print("Select product ID: ");
+        int id = scanner.nextInt();
+
+        Product product = findProduct(id);
+        if (product == null) {
+            System.out.println("Product not found!");
+            return;
+        }
+
+        System.out.print("Enter quantity to sell: ");
+        int quantity = scanner.nextInt();
+
+        try {
+            product.getStock().reserve(quantity);
+            product.getStock().confirmSale(quantity);
+            System.out.printf("Sold %d of %s. Total: $%.2f%n",
+                    quantity, product.getName(), product.calculateTotalForQuantity(quantity));
+        } catch (IllegalStateException e) {
+            System.out.println("Error: " + e.getMessage());
+        }
+    }
+
+    private static void listProducts() {
+        System.out.println("\nAvailable Products:");
+        products.forEach(p -> System.out.printf("ID: %d | %-20s | Price: $%-8.2f | Stock: %s%n",
+                p.getId(), p.getName(), p.getPrice(), p.getStock()));
+    }
+
+    private static Product findProduct(int id) {
+        return products.stream()
+                .filter(p -> p.getId() == id)
+                .findFirst()
+                .orElse(null);
     }
 }

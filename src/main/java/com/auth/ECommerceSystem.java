@@ -80,7 +80,7 @@ public class ECommerceSystem {
             System.out.println("5. Logout");
             System.out.print("Enter your choice: ");
             choice = scanner.nextInt();
-            scanner.nextLine();  // Consume newline
+            scanner.nextLine();
 
             switch (choice) {
                 case 1 -> addProduct();

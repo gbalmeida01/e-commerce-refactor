@@ -1,8 +1,15 @@
-package com.auth;
+package com.auth.controller;
+
+import com.auth.service.ProductService;
+import com.auth.util.ReportGenerator;
+import com.auth.model.Product;
+import com.auth.model.User;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+
+import static com.auth.service.ProductService.*;
 
 public class ECommerceSystem {
     private static List<Product> products = new ArrayList<>();
@@ -11,6 +18,7 @@ public class ECommerceSystem {
     private static int userIdCounter = 1;
 
     public static void main(String[] args) {
+        ProductService productService = new ProductService(products, scanner);
         int choice;
 
         do {
@@ -93,61 +101,6 @@ public class ECommerceSystem {
         } while (choice != 5);
     }
 
-    private static void addProduct() {
-        System.out.println("\n=== Add New Product ===");
-        System.out.print("Enter product ID: ");
-        int id = scanner.nextInt();
-        scanner.nextLine();
-
-        System.out.print("Enter product name: ");
-        String name = scanner.nextLine();
-
-        System.out.print("Enter description: ");
-        String description = scanner.nextLine();
-
-        System.out.print("Enter price: ");
-        double price = scanner.nextDouble();
-
-        System.out.print("Enter initial stock: ");
-        int stock = scanner.nextInt();
-
-        products.add(new Product(id, name, description, price, stock));
-        System.out.println("Product added successfully!");
-    }
-
-    private static void updateStock() {
-        if (products.isEmpty()) {
-            System.out.println("No products available!");
-            return;
-        }
-
-        System.out.println("\n=== Update Stock ===");
-        listProducts();
-
-        System.out.print("Select product ID: ");
-        int id = scanner.nextInt();
-
-        Product product = findProduct(id);
-        if (product == null) {
-            System.out.println("Product not found!");
-            return;
-        }
-
-        System.out.print("Enter quantity to add (use negative to remove): ");
-        int quantity = scanner.nextInt();
-
-        try {
-            if (quantity > 0) {
-                product.getStock().add(quantity);
-            } else {
-                product.getStock().remove(-quantity);
-            }
-            System.out.println("Stock updated successfully!");
-        } catch (IllegalArgumentException e) {
-            System.out.println("Error: " + e.getMessage());
-        }
-    }
-
     private static void processSale() {
         if (products.isEmpty()) {
             System.out.println("No products available!");
@@ -177,18 +130,5 @@ public class ECommerceSystem {
         } catch (IllegalStateException e) {
             System.out.println("Error: " + e.getMessage());
         }
-    }
-
-    private static void listProducts() {
-        System.out.println("\nAvailable Products:");
-        products.forEach(p -> System.out.printf("ID: %d | %-20s | Price: $%-8.2f | Stock: %s%n",
-                p.getId(), p.getName(), p.getPrice(), p.getStock()));
-    }
-
-    private static Product findProduct(int id) {
-        return products.stream()
-                .filter(p -> p.getId() == id)
-                .findFirst()
-                .orElse(null);
     }
 }

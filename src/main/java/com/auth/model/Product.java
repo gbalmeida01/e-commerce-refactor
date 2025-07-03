@@ -1,4 +1,4 @@
-package com.auth;
+package com.auth.model;
 
 import java.util.Objects;
 

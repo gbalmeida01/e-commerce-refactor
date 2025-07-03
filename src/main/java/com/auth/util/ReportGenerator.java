@@ -1,4 +1,7 @@
-package com.auth;
+package com.auth.util;
+
+import com.auth.model.Inventory;
+import com.auth.model.Product;
 
 import java.util.List;
 import java.util.Scanner;

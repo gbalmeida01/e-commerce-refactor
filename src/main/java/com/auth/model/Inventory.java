@@ -1,4 +1,4 @@
-package com.auth;
+package com.auth.model;
 
 public class Inventory {
     private int amount;

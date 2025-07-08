@@ -1,6 +1,7 @@
 package com.auth.controller;
 
 import com.auth.service.ProductService;
+import com.auth.service.UserService;
 import com.auth.util.ReportGenerator;
 import com.auth.model.Product;
 import com.auth.model.User;
@@ -19,6 +20,7 @@ public class ECommerceSystem {
 
     public static void main(String[] args) {
         ProductService productService = new ProductService(products, scanner);
+        UserService userService = new UserService(users, scanner);
         int choice;
 
         do {
@@ -31,8 +33,13 @@ public class ECommerceSystem {
             scanner.nextLine(); // Consume newline
 
             switch (choice) {
-                case 1 -> createAccount();
-                case 2 -> login();
+                case 1 -> userService.createAccount();
+                case 2 -> {
+                    User loggedInUser = userService.login();
+                    if (loggedInUser != null) {
+                        runAdminPanel(loggedInUser, productService);
+                    }
+                }
                 case 3 -> System.out.println("Exiting system...");
                 default -> System.out.println("Invalid choice!");
             }
@@ -40,44 +47,7 @@ public class ECommerceSystem {
         } while (choice != 3);
     }
 
-    private static void createAccount() {
-        System.out.println("\n=== Create Admin Account ===");
-
-        System.out.print("Enter username: ");
-        String username = scanner.nextLine();
-
-        System.out.print("Enter email: ");
-        String email = scanner.nextLine();
-
-        System.out.print("Enter password: ");
-        String password = scanner.nextLine();
-
-        User newUser = new User(userIdCounter++, username, email, password, "admin");
-        users.add(newUser);
-        System.out.println("Admin account created successfully!");
-    }
-
-    private static void login() {
-        System.out.println("\n=== Admin Login ===");
-
-        System.out.print("Enter email: ");
-        String email = scanner.nextLine();
-
-        System.out.print("Enter password: ");
-        String password = scanner.nextLine();
-
-        for (User user : users) {
-            if (user.getEmail().equals(email) && user.getPassword().equals(password) && user.getRole().equals("admin")) {
-                System.out.println("Login successful. Welcome, " + user.getUserName() + "!");
-                runAdminPanel(user);
-                return;
-            }
-        }
-
-        System.out.println("Invalid credentials or not an admin!");
-    }
-
-    private static void runAdminPanel(User user) {
+    private static void runAdminPanel(User user, ProductService productService) {
         int choice;
         do {
             System.out.println("\n=== Admin Panel ===");
@@ -91,15 +61,16 @@ public class ECommerceSystem {
             scanner.nextLine();
 
             switch (choice) {
-                case 1 -> addProduct();
-                case 2 -> updateStock();
-                case 3 -> processSale();
+                case 1 -> productService.addProduct();
+                case 2 -> productService.updateStock();
+                case 3 -> processSale(); // ainda está no ECommerceSystem
                 case 4 -> new ReportGenerator(products).showMenu();
                 case 5 -> System.out.println("Logging out...");
                 default -> System.out.println("Invalid choice!");
             }
         } while (choice != 5);
     }
+
 
     private static void processSale() {
         if (products.isEmpty()) {
